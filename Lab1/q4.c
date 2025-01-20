@@ -1,85 +1,123 @@
-//USE HAST TABLE TO STORE INDEX OF WORD IN A STRING ARRAY
-
-
 #include <stdio.h>
-#include <stdlib.h> // For exit()
+#include <stdlib.h>
 #include <string.h>
 
-char verb[8][20] = {
-int hasht[8][8]={0}
+#define TABLE_SIZE 100
+#define MAX_WORD_LEN 50
+
+// Hash table structure
+char *hashTable[TABLE_SIZE];
+
+// Hash function
+int hash(const char *str) {
+    int hash = 0;
+    int i=0;
+    while (str[i]!='\0') {
+        hash += str[i];
+        i++;
+    }
+    return hash % TABLE_SIZE;
 }
+
+// SEARCH function
+int search(const char *key) {
+    int index = hash(key);
+    int originalIndex = index;
+
+    while (hashTable[index] != NULL) {
+        if (strcmp(hashTable[index], key) == 0) {
+            return index;
+        }
+        index = (index + 1) % TABLE_SIZE;
+        if (index == originalIndex) {
+            break; 
+        }
+    }
+    return -1;
+}
+
+void insert(const char *str) {
+    if (search(str) != -1) {
+        printf("Verb '%s' is already in the hash table.\n", str);
+        return;
+    }
+
+    int index = hash(str);
+    while (hashTable[index] != NULL) {
+        index = (index + 1) % TABLE_SIZE;
+    }
+
+    hashTable[index] = (char *)malloc(strlen(str) + 1);
+    
+    strcpy(hashTable[index], str);
+    printf("Inserted '%s' at index %u\n", str, index);
+}
+
+int isVerb(const char *word) {
+
+    const char *verbs[9] = {"run", "jump", "play", "eat", "write", "read", "sing", "talk", "walk"};
+
+    for (int i = 0; i<9; i++) {
+        if (strcmp(word, verbs[i]) == 0) {
+            return 1;
+        }
+    }
+    return 0;
+}
+
+int isAlpha(char ch) {
+    return (ch >= 'A' && ch <= 'Z') || (ch >= 'a' && ch <= 'z');
+}
+
+int main() {
    
-int calc_hash(char*str)
-{
-	int len=strlen(str);
-	int hval=0;
-	for(int i=0;i<len;i++)
-		hval+=str[i];
-	hval=hval%8;
-	return hval;
-}
+    for (int i = 0; i < TABLE_SIZE; i++) {
+        hashTable[i] = NULL;
+    }
 
-int search(char* str, int hval)
-{
- 	for(int i=0;i<8;i++)
-	{
-		if(strcmp(verb[hval][i],str)==0)
-			return 1;
-	}
-	return 0;
-}
-
-void insert(char* str)
-{
-	int hval=calc_hash(str)
-	if(search(str,hval))
-		return;
-	
-	for(int i=0;i<8;i++)
-	{
-		if(strcmp(verb[hval][i],"")==0)
-		{
-			strcpy(verb[hval][i],str);
-			break;
-		}
-	}
-}
-
-int isalpha(char c)
-{
-	if((c>=65 && c<=90) || (c>=97 && c<=122))
-		return 1;
-	return 0;
-}
-
-
-int main()
-{
-	verb
-	FILE *fptr1, *fptr2;
-	char filename[100], c;
-	int size,pos;
-	printf("Enter the filename to open for reading: \n");
-	scanf("%s", filename);
-	fptr1 = fopen(filename, "r");
-	if (fptr1 == NULL)
+    char filename[100];
+    printf("Enter the first filename to open for reading: \n");
+	scanf("%[^\n]c", filename);
+	FILE* file = fopen(filename, "r");
+	if (file == NULL)
 	{
 		printf("Cannot open file %s \n", filename);
 		exit(0);
 	}
-	c=fgetc(fptr1);
-	char buf[15];
-	while(c!=EOF)
-	{
-		int i=0;
-		while(isalpha(c))
-		{
-			buf[i]=c;
-			i++;
-			c=fgetc(fptr1);
-		}
-		buf[i]='\0';
-		insert(buf);
 
-	}
+    char word[MAX_WORD_LEN];
+    int index = 0;
+    char ch;
 
+    while ((ch = fgetc(file)) != EOF) {
+        if (isAlpha(ch)) {
+            word[index++] = ch;
+        } else if (index > 0) {
+            word[index] = '\0';
+            index = 0;
+
+            if (isVerb(word)) {
+                insert(word);
+            }
+        }
+    }
+
+    // Handle the last word in the file
+    if (index > 0) {
+        word[index] = '\0';
+        if (isVerb(word)) {
+            insert(word);
+        }
+    }
+
+    fclose(file);
+
+    printf("\nHash table contents:\n");
+    for (int i = 0; i < TABLE_SIZE; i++) {
+        if (hashTable[i] != NULL) {
+            printf("Index %d: %s\n", i, hashTable[i]);
+        }
+    }
+
+    return 0;
+}
