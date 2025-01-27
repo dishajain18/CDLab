@@ -1,118 +1,140 @@
-//doesnt work for define
 #include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
 
-int is_valid_include(FILE *fptr1) {
-    char ch;
+#define MAX_BUFFER 100
 
-    char include[] = "include";
-    for (int i = 0; i < 7; i++) {
-        ch = fgetc(fptr1);
-        if (ch != include[i]) {
-            return 0;
-        }
+// Skip whitespace characters
+void skipWhitespace(FILE *fp, long *pos) {
+    char c;
+    while ((c = fgetc(fp)) == ' ' || c == '\t') {
+        (*pos)++;
     }
-
-    while ((ch = fgetc(fptr1)) == ' ' || ch == '\t');
-
-    if (ch == '<' || ch == '"') {
-        char end_char = (ch == '<') ? '>' : '"';
-        // Read until the matching end character
-        while ((ch = fgetc(fptr1)) != end_char) {
-            if (ch == EOF) return 0; // Improper include syntax
-        }
-        return 1;
-    }
-
-    return 0;
+    fseek(fp, -1, SEEK_CUR);
+    (*pos)--;
 }
 
-int is_valid_define(FILE *fptr1) {
-    char ch;
+// Read a word after #
+int readWord(FILE *fp, char *buffer, long *pos) {
+    char c;
+    int i = 0;
 
-    char define[] = "define";
-    for (int i = 0; i < 6; i++) {
-        ch = fgetc(fptr1);
-        if (ch != define[i]) {
-            return 0;
-        }
+    while ((c = fgetc(fp)) != EOF && ((c >= 'a' && c <= 'z') || (c >= 'A' && c <= 'Z'))) {
+        buffer[i++] = c;
+        (*pos)++;
     }
 
-    while ((ch = fgetc(fptr1)) == ' ' || ch == '\t');
+    buffer[i] = '\0'; // Null-terminate the string
 
-    // Check if the first character of the macro name is valid
-    if (ch != EOF && ((ch >= 'a' && ch <= 'z') || (ch >= 'A' && ch <= 'Z'))) {
-        // The macro name is valid, now check if there's a value or expression after it
+    // Move back one character since the last read wasn't part of the word
+    fseek(fp, -1, SEEK_CUR);
+    (*pos)--;
 
-        // Skip over the macro name
-        while ((ch = fgetc(fptr1)) != EOF && ((ch >= 'a' && ch <= 'z') || (ch >= 'A' && ch <= 'Z') ));
-
-        // Skip spaces or tabs after the macro name
-        while ((ch = fgetc(fptr1)) == ' ' || ch == '\t');
-
-        // If the macro has no value (i.e., end of line), it's a valid define without a value
-        if (ch == '\n' || ch == EOF) {
-            return 1;
-        }
-        // Now we expect a valid expression or value after the macro name
-        while (ch != EOF && (ch >= '0' && ch <= '9')&& ch!='\n') {
-            ch = fgetc(fptr1);
-        }
-        if(ch=='\n'||ch == EOF)
-          return 1;
-    }
-
-    return 0;  
+    return i;
 }
 
-int main() {
-    FILE *fptr1, *fptr2;
-    char filename[100];
-    
-    // Get input file name
-    printf("Enter the input file name: ");
-    scanf("%[^\n]c", filename);
+// Check and skip a valid #include directive
+int isValidInclude(FILE *fp, long *pos) {
+    char c;
+    skipWhitespace(fp, pos);
 
-    // Open the input file for reading
-    fptr1 = fopen(filename, "r");
-    if (fptr1 == NULL) {
-        printf("Error opening file for reading.\n");
-        return 1;
+    c = fgetc(fp);
+    (*pos)++;
+    if (c == '<' || c == '"') {
+        char endChar = (c == '<') ? '>' : '"';
+        while ((c = fgetc(fp)) != EOF) {
+            (*pos)++;
+            if (c == endChar) {
+                return 1; // Valid #include directive
+            }
+            if (c == '\n') {
+                break; // Invalid if newline before closing
+            }
+        }
     }
-    printf("Enter the output file name: ");
-    scanf(" %[^\n]c", filename);
+    return 0; // Invalid #include directive
+}
 
-    // Open the output file for writing
-    fptr2 = fopen(filename, "w+");
-    if (fptr2 == NULL) {
-        printf("Error opening file for writing.\n");
-        fclose(fptr1);
-        return 1;
+// Check and skip a valid #define directive
+int isValidDefine(FILE *fp, long *pos) {
+    char c;
+    skipWhitespace(fp, pos);
+
+    c = fgetc(fp);
+    (*pos)++;
+    if (!((c >= 'A' && c <= 'Z') || (c >= 'a' && c <= 'z') || c == '_')) {
+        return 0; // Must start with a valid macro name
     }
 
-    char ch;
-    while ((ch = fgetc(fptr1)) != EOF) {
-        if (ch == '#') {
-            // Check for valid #include or #define
-            if (is_valid_include(fptr1) || is_valid_define(fptr1)) {
-                continue;
+    // Skip valid macro name
+    while ((c >= 'A' && c <= 'Z') || (c >= 'a' && c <= 'z') || (c >= '0' && c <= '9') || c == '_') {
+        c = fgetc(fp);
+        (*pos)++;
+    }
+
+    // Skip rest of the line
+    while (c != '\n' && c != EOF) {
+        c = fgetc(fp);
+        (*pos)++;
+    }
+
+    return 1; // Valid #define directive
+}
+
+// Skip valid preprocessor directive
+int skipDirective(FILE *fp, long *pos) {
+    char buffer[MAX_BUFFER];
+    readWord(fp, buffer, pos);
+
+    if (strcmp(buffer, "include") == 0) {
+        return isValidInclude(fp, pos);
+    } else if (strcmp(buffer, "define") == 0) {
+        return isValidDefine(fp, pos);
+    }
+
+    return 0; // Not a valid directive
+}
+
+// Process the file to remove valid preprocessor directives
+void processFile(const char *inputFile, const char *outputFile) {
+    FILE *inFile = fopen(inputFile, "r");
+    FILE *outFile = fopen(outputFile, "w");
+
+    if (!inFile || !outFile) {
+        perror("Error opening file");
+        exit(EXIT_FAILURE);
+    }
+
+    char c;
+    long pos = 0;
+
+    while ((c = fgetc(inFile)) != EOF) {
+        pos++;
+
+        if (c == '#') {
+            long prevPos = ftell(inFile);
+            if (skipDirective(inFile, &pos)) {
+                continue; // Skip valid directive
             } else {
-                fputc('#', fptr2);
-                // Go back and write the directive to output
-                fseek(fptr1, -1, SEEK_CUR);  
-                while ((ch = fgetc(fptr1)) != EOF && ch != '\n') {
-                    fputc(ch, fptr2);
-                }
-                fputc('\n', fptr2); 
-                continue;
+                fseek(inFile, prevPos, SEEK_SET); // Rewind for invalid directive
+                pos = prevPos - 1;                // Adjust position tracking
             }
         }
 
-        fputc(ch, fptr2);
+        fputc(c, outFile); // Write non-directive content and invalid directives
     }
 
-    fclose(fptr1);
-    fclose(fptr2);
+    fclose(inFile);
+    fclose(outFile);
+}
 
-    printf("Preprocessor directives discarded. Output written to %s.\n",filename);
+int main() {
+    const char *inputFile = "input.c";
+    const char *outputFile = "output.c";
+
+    printf("Processing file: %s\n", inputFile);
+    processFile(inputFile, outputFile);
+    printf("Processed output written to: %s\n", outputFile);
 
     return 0;
+}
