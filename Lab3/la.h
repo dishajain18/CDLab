@@ -128,6 +128,18 @@ token getNextToken(FILE *fp) {
 
     while ((c = fgetc(fp)) != EOF) {
         col++;
+        
+        if(c=='"')
+        {
+            c = fgetc(fp);
+            while(c!='"')
+            {
+                if(c==EOF)
+                break;
+                c = fgetc(fp);
+            }
+            c = fgetc(fp);
+        }
 
         if (c == '\n') {
             row++;
@@ -140,11 +152,13 @@ token getNextToken(FILE *fp) {
         }
 
         if (c == '#') {
-            long prevPos = ftell(fp);
-            if (skipDirective(fp, &prevPos)) {
+            long Pos = ftell(fp);
+            long prev = Pos;
+
+            if (skipDirective(fp, &Pos)) {
                 continue; // Skip valid directive
             } else {
-                fseek(fp, prevPos, SEEK_SET); // Rewind for invalid directive
+                fseek(fp, prev, SEEK_SET); // Rewind for invalid directive
             }
         }
 
@@ -154,7 +168,7 @@ token getNextToken(FILE *fp) {
                 tk.tokenName[0] = c;
                 tk.tokenName[1] = '\0';
                 tk.row = row;
-                tk.col = col;
+                tk.col = col;               
                 return tk;
             }
         }
@@ -200,6 +214,7 @@ token getNextToken(FILE *fp) {
                 c = fgetc(fp);
                 col++;
             }
+            printf("\n");
             buffer[i] = '\0';
             fseek(fp, -1, SEEK_CUR);
             col--;
