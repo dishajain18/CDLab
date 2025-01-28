@@ -336,6 +336,7 @@ token getNextToken(FILE *fp) {
 	            	 }
 	            	 else
 	            	  symtable[val]->size=dsize;
+			 fseek(fp,pos,SEEK_SET);
             	}
             	
                 strcpy(tk.tokenName, "id");
