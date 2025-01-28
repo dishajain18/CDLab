@@ -6,7 +6,7 @@
 #define MAX_IDENTIFIER_LEN 20
 #define MAX_SYMBOLS 20
 
-char *keyword[8] = {"main", "int", "char", "float", "bool", "if", "else","return"};
+char *keyword[9] = {"int", "char", "float", "bool", "if", "else","return","true","false"};
 char *relop[6] = {"==", "!=", "<=", ">=", "<", ">"};
 char *reloptk[6] = {"EQ", "NE", "LE", "GE", "LT", "GT"};
 char spesymbol[10] = {'#', ',', ';', '(', ')', '{', '}', '[', ']', '='};
@@ -77,7 +77,7 @@ int isAlnum(char c) {
 }
 
 int isKeyword(char *str) {
-    for (int i = 0; i < 8; i++) {
+    for (int i = 0; i < 9; i++) {
         if (strcmp(keyword[i], str) == 0) {
             return i;
         }
@@ -179,21 +179,92 @@ token getNextToken(FILE *fp) {
     while ((c = fgetc(fp)) != EOF) {
         col++;
         
+        if (c == '/')
+        {
+            char m = fgetc(fp);
+            col++;
+            if (m == '/')
+            {
+                // Handle single-line comment
+                while ((m = fgetc(fp)) != '\n' && m != EOF)
+                {
+                    col++;
+                }
+                if (m == '\n')
+                {
+                    row++;
+                    col = 0;
+                }
+                continue; // Skip the rest and move to the next character
+            }
+            else if (m == '*')
+            {
+                // Handle multi-line comment
+                bool closed = false;
+                while ((m = fgetc(fp)) != EOF)
+                {
+                    col++;
+                    if (m == '\n')
+                    {
+                        row++;
+                        col = 0;
+                    }
+                    else if (m == '*')
+                    {
+                        char next = fgetc(fp);
+                        col++;
+                        if (next == '/')
+                        {
+                            closed = true;
+                            break;
+                        }
+                        else
+                        {
+                            fseek(fp, -1, SEEK_CUR);
+                            col--;
+                        }
+                    }
+                }
+                if (!closed)
+                {
+                    // Reached EOF without closing the comment
+                    strcpy(tk.tokenName, "EOF");
+                    tk.row = -1;
+                    tk.col = -1;
+                    return tk;
+                }
+                continue; // Skip the rest and move to the next character
+            }
+            else
+            {
+                // Not a comment, rewind to process '/' as a normal character
+                fseek(fp, -1, SEEK_CUR);
+                col--;
+            }
+        }
+
+        
         if(c=='"')
         {
             c = fgetc(fp);
+            col++;
             while(c!='"')
             {
                 if(c==EOF)
-                break;
+                 break;
+                if(c=='\n')
+                 row++;
                 c = fgetc(fp);
+                col++;
             }
             c = fgetc(fp);
+            col++;
         }
 
         if (c == '\n') {
-        	strcpy(dbuf,""); //the datatype no longer applies after nextline
-        	dsize=0;
+            strcpy(dbuf,""); //the datatype no longer applies after nextline
+            printf("%d %s\n",row+1,dbuf);
+            dsize=0;
             row++;
             col = 0;
             continue;
@@ -266,6 +337,7 @@ token getNextToken(FILE *fp) {
                 c = fgetc(fp);
                 col++;
             }
+            printf("\n");
             buffer[i] = '\0';
             fseek(fp, -1, SEEK_CUR);
             col--;
@@ -277,24 +349,28 @@ token getNextToken(FILE *fp) {
                 {
                 	strcpy(dbuf,"int");
                 	dsize=sizeof(int);
+                	printf("%d %s\n",row,dbuf);
                 }
 
                 else if(strcmp(buffer,"float")==0)
                 {
                 	strcpy(dbuf,"float");
                 	dsize=sizeof(float);
+                	printf("%d %s\n",row,dbuf);
                 }
 
                 else if(strcmp(buffer,"char")==0)
                 {
                 	strcpy(dbuf,"char");
                 	dsize=sizeof(char);
+                	printf("%d %s\n",row,dbuf);
                 }
 
                 else if(strcmp(buffer,"bool")==0)
                 {
                 	strcpy(dbuf,"bool");
                 	dsize=sizeof(bool);
+                	printf("%d %s\n",row,dbuf);
                 }
 
             } else {
@@ -335,7 +411,7 @@ token getNextToken(FILE *fp) {
 	            	 }
 	            	 else
 	            	  symtable[val]->size=dsize;
-			 fseek(fp,pos,SEEK_SET);
+	            	  fseek(fp,pos,SEEK_SET);
             	}
             	
                 strcpy(tk.tokenName, "id");
