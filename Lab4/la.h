@@ -266,7 +266,6 @@ token getNextToken(FILE *fp) {
                 c = fgetc(fp);
                 col++;
             }
-            printf("\n");
             buffer[i] = '\0';
             fseek(fp, -1, SEEK_CUR);
             col--;
