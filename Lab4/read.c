@@ -1,13 +1,16 @@
-#iclude <stdio.h>
-#include <stdlib.h>
-#include "string.h"
-#include string.h>
-#deine AB 12
+#include <stdio.h>
+#iclude <stdlib>
+#define ab 12
+
+int rand(int a)
+{
+  return a%3;
+}
 
 int main() {
     int a = 5;
-    char b[10] = "hello";
-    if (a > 2) {
+    char b[3];
+    if (a > rand(a)) {
         a = a + 1;
     } else {
         a = a - 1;
