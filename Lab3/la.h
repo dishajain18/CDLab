@@ -128,7 +128,69 @@ token getNextToken(FILE *fp) {
 
     while ((c = fgetc(fp)) != EOF) {
         col++;
-        
+        if (c == '/')
+        {
+            char m = fgetc(fp);
+            col++;
+            if (m == '/')
+            {
+                // Handle single-line comment
+                while ((m = fgetc(fp)) != '\n' && m != EOF)
+                {
+                    col++;
+                }
+                if (m == '\n')
+                {
+                    row++;
+                    col = 0;
+                }
+                continue; // Skip the rest and move to the next character
+            }
+            else if (m == '*')
+            {
+                // Handle multi-line comment
+                bool closed = false;
+                while ((m = fgetc(fp)) != EOF)
+                {
+                    col++;
+                    if (m == '\n')
+                    {
+                        row++;
+                        col = 0;
+                    }
+                    else if (m == '*')
+                    {
+                        char next = fgetc(fp);
+                        col++;
+                        if (next == '/')
+                        {
+                            closed = true;
+                            break;
+                        }
+                        else
+                        {
+                            fseek(fp, -1, SEEK_CUR);
+                            col--;
+                        }
+                    }
+                }
+                if (!closed)
+                {
+                    // Reached EOF without closing the comment
+                    strcpy(tk.tokenName, "EOF");
+                    tk.row = -1;
+                    tk.col = -1;
+                    return tk;
+                }
+                continue; // Skip the rest and move to the next character
+            }
+            else
+            {
+                // Not a comment, rewind to process '/' as a normal character
+                fseek(fp, -1, SEEK_CUR);
+                col--;
+            }
+        }
         if(c=='"')
         {
             c = fgetc(fp);
