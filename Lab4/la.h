@@ -6,7 +6,7 @@
 #define MAX_IDENTIFIER_LEN 20
 #define MAX_SYMBOLS 20
 
-char *keyword[7] = {"main", "int", "char", "float", "bool", "if", "else"};
+char *keyword[8] = {"main", "int", "char", "float", "bool", "if", "else","return"};
 char *relop[6] = {"==", "!=", "<=", ">=", "<", ">"};
 char *reloptk[6] = {"EQ", "NE", "LE", "GE", "LT", "GT"};
 char spesymbol[10] = {'#', ',', ';', '(', ')', '{', '}', '[', ']', '='};
@@ -77,7 +77,7 @@ int isAlnum(char c) {
 }
 
 int isKeyword(char *str) {
-    for (int i = 0; i < 7; i++) {
+    for (int i = 0; i < 8; i++) {
         if (strcmp(keyword[i], str) == 0) {
             return i;
         }
@@ -310,7 +310,32 @@ token getNextToken(FILE *fp) {
 	            	symtable[val]=(SYMBOL*)malloc(sizeof(SYMBOL));
 	            	strcpy(symtable[val]->lexname,buffer);
 	            	strcpy(symtable[val]->type,dbuf);
-	            	symtable[val]->size=dsize;
+	            	long pos = ftell(fp);
+	            	char m;
+	            	while((m=fgetc(fp))==' ');
+	            	if(m=='(')
+	            	  symtable[val]->size=-1;
+	            	else if(m=='[')
+	            	 {
+	            	    char num[5];
+	            	    num[0]=fgetc(fp);
+	            	    i=0;
+	            	    while(isDigit(num[i]))
+	            	    {
+	            	      i++;
+	            	      num[i]=fgetc(fp);
+	            	    }
+	            	    num[i]='\0';
+	            	    if(strcmp(num,"")==0) //i.e if empty string
+	            	      symtable[val]->size=0;
+	            	    else
+	            	    {
+	            	      int x=atoi(num);
+	            	      symtable[val]->size=x*dsize;
+	            	    }
+	            	 }
+	            	 else
+	            	  symtable[val]->size=dsize;
             	}
             	
                 strcpy(tk.tokenName, "id");
