@@ -9,7 +9,7 @@
 (.|\n) { fprintf(yyout, "%s", yytext); }  
 
 %%
-
+//instead of [*] you can do \* also
 int main() {
     printf("Enter input filename: ");
     char filename[20];
