@@ -262,7 +262,10 @@ token getNextToken(FILE *fp) {
                 if(c==EOF)
                  break;
                 if(c=='\n')
+		{
+		 col=0;	
                  row++;
+		}
                 c = fgetc(fp);
                 col++;
             }
