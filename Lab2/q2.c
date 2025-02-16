@@ -58,6 +58,10 @@ int isValidInclude(FILE *fp, long *pos) {
 // Check and skip a valid #define directive
 int isValidDefine(FILE *fp, long *pos) {
     char c;
+    c = fgetc(fp);
+    (*pos)++;
+    if(c!=' ' || c!='\t')
+        return 0;
     skipWhitespace(fp, pos);
 
     c = fgetc(fp);
@@ -71,6 +75,11 @@ int isValidDefine(FILE *fp, long *pos) {
         c = fgetc(fp);
         (*pos)++;
     }
+
+    c = fgetc(fp);
+    (*pos)++;
+    if(c!=' ' || c!='\t')
+        return 0;
 
     // Skip rest of the line
     while (c != '\n' && c != EOF) {
