@@ -275,7 +275,6 @@ token getNextToken(FILE *fp) {
 
         if (c == '\n') {
             strcpy(dbuf,""); //the datatype no longer applies after nextline
-            printf("%d %s\n",row+1,dbuf);
             dsize=0;
             row++;
             col = 0;
@@ -341,7 +340,7 @@ token getNextToken(FILE *fp) {
         }
 
         // Check for keywords or identifiers
-        if (isAlpha(c)) {
+        if (isAlpha(c) || c == '_') {
             char buffer[MAX_IDENTIFIER_LEN];
             int i = 0;
             while (isAlnum(c) || c == '_') {
@@ -349,7 +348,6 @@ token getNextToken(FILE *fp) {
                 c = fgetc(fp);
                 col++;
             }
-            printf("\n");
             buffer[i] = '\0';
             fseek(fp, -1, SEEK_CUR);
             col--;
@@ -361,28 +359,24 @@ token getNextToken(FILE *fp) {
                 {
                 	strcpy(dbuf,"int");
                 	dsize=sizeof(int);
-                	printf("%d %s\n",row,dbuf);
                 }
 
                 else if(strcmp(buffer,"float")==0)
                 {
                 	strcpy(dbuf,"float");
                 	dsize=sizeof(float);
-                	printf("%d %s\n",row,dbuf);
                 }
 
                 else if(strcmp(buffer,"char")==0)
                 {
                 	strcpy(dbuf,"char");
                 	dsize=sizeof(char);
-                	printf("%d %s\n",row,dbuf);
                 }
 
                 else if(strcmp(buffer,"bool")==0)
                 {
                 	strcpy(dbuf,"bool");
                 	dsize=sizeof(bool);
-                	printf("%d %s\n",row,dbuf);
                 }
 
             } else {
@@ -392,14 +386,16 @@ token getNextToken(FILE *fp) {
             		int val= hashfunction(buffer);
 	            	while(symtable[val]!=NULL)
 	            	{
-	            		val++;
+	            		val = (val + 1) % MAX_SYMBOLS;
 	            	}
 	            	symtable[val]=(SYMBOL*)malloc(sizeof(SYMBOL));
 	            	strcpy(symtable[val]->lexname,buffer);
 	            	strcpy(symtable[val]->type,dbuf);
 	            	long pos = ftell(fp);
 	            	char m;
-	            	while((m=fgetc(fp))==' ');
+	            	while((m=fgetc(fp))==' ')
+				col++;
+			col++;
 	            	if(m=='(')
 	            	  symtable[val]->size=-1;
 	            	else if(m=='[')
