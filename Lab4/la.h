@@ -269,8 +269,7 @@ token getNextToken(FILE *fp) {
                 c = fgetc(fp);
                 col++;
             }
-            c = fgetc(fp);
-            col++;
+            continue;
         }
 
         if (c == '\n') {
