@@ -1,0 +1,20 @@
+*terminals*
+main
+(
+)
+{
+}
+int
+char
+id
+=
+E
+;
+
+*nonterminal*			*first*		  *follow*    
+Program				 main		    EOF	
+declarations  			int,char,E	    id          
+data-type			int,char	    id
+identifier-list			  id		    ;
+assign_stat			  id		    }
+
