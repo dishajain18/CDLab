@@ -36,10 +36,26 @@ id
 E
 ;
 
-*nonterminal*			*first*		  *follow*    
-Program				 main		    EOF	
-declarations  			int,char,E	    id          
-data-type			int,char	    id
-identifier-list			  id		    ;
-assign_stat			  id		    }
+*nonterminal*			*first*		  		*follow*    
+Program				 main		    		  EOF	
+declarations  			int char E	    		  id          
+data-type			int char	    		  id
+identifier-list			  id		    		  ;
+identifier-list1		 , [ E		    		  ;
+identifier-list2		 , E		   		  ;
+statement-list			id if E		   		  }
+statement			id if		  		  id if }
+assign_stat			  id		 		  ;
+expn 				id num		      		  ; )
+eprime				== != <= >= > < E   		  ; )
+simple-exp			id num 				  == != <= >= > < ; )
+seprime				+ - E				  == != <= >= > < ; )
+term				id num				  + - == != <= >= > < ; )
+tprime				* / % E				  + - == != <= >= > < ; )
+factor				id num				  * / % + - == != <= >= > < ; )
+decision-stat			if				  id if }
+dprime				else E				  id if }
+relop				== != <= >= > <			  id num
+addop				+ -				  id num
+mulop				* / %				  id num
 
