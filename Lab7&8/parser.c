@@ -28,7 +28,7 @@ mulop -> *|/|%
 #include <stdlib.h>
 #include <string.h>
 
-FILE * fp;
+FILE fp;
 int lookahead = 0;
 token tk;
 void NextToken()
@@ -49,6 +49,12 @@ void valid()
     printf("\n----------------SUCCESS!---------------\n");
     exit(0);
 }
+
+void statement_list();
+void expn();
+void id_list();
+void statement();
+void declarations();
 
 void mulop()
 {
@@ -221,7 +227,7 @@ void expn()
         invalid( "id or num");
 }
 
-void assign_stat(token* tk)
+void assign_stat(token tk)
 {
     if(strcmp(tk.tokenName,"id")==0)
         return;
@@ -338,11 +344,13 @@ void Program()
                     NextToken();
                     statement_list();
                     if(strcmp(tk.tokenName,"}")==0)
-                        NextToken();
-                        if(strcmp(tk.tokenName,"EOF")==0)
-                            valid();
-                        else
-                            invalid("EOF");
+                        {
+                            NextToken();
+                            if(strcmp(tk.tokenName,"EOF")==0)
+                                valid();
+                            else
+                                invalid("EOF");
+                        }
                     else
                         invalid( "}");
                 }
@@ -371,7 +379,7 @@ void declarations()
 
     data_type();
     NextToken();
-    identifier_list();
+    id_list();
     NextToken();
     if(strcmp(tk.tokenName,";")==0)
     {
@@ -384,7 +392,7 @@ void declarations()
 }
 
 int main() {
-    *fp = fopen("read.c", "r");
+    fp = fopen("read.c", "r");
     if (!fp) {
         printf("Error opening file.\n");
         return 1;
@@ -392,6 +400,6 @@ int main() {
     for(int i=0;i<MAX_SYMBOLS;i++)
         symtable[i]=NULL;
     Program();
-    fclose(fp);
+    fclose(&fp);
     return 0;
 }
