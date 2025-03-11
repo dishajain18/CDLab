@@ -38,7 +38,7 @@ E
 
 *nonterminal*			*first*		  		*follow*    
 Program				 main		    		  EOF	
-declarations  			int char E	    		  id          
+declarations  			int char E	    		  id } if         
 data-type			int char	    		  id
 identifier-list			  id		    		  ;
 identifier-list1		 , [ E		    		  ;
