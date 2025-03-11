@@ -6,8 +6,8 @@
 #define MAX_IDENTIFIER_LEN 20
 #define MAX_SYMBOLS 20
 
-char *keyword[7] = {"main","int", "char", "if", "else","return","true","false"};
-char *relop[6] = {"==", "!=", "<=", ">=", "<", ">"};
+char *keyword[6] = {"main","int", "char", "if", "else","return"};
+char *relops[6] = {"==", "!=", "<=", ">=", "<", ">"};
 char spesymbol[10] = {'#', ',', ';', '(', ')', '{', '}', '[', ']', '='};
 char ariop[5] = {'+', '-', '*', '/', '%'};
 char dbuf[8]= "";
@@ -76,7 +76,7 @@ int isAlnum(char c) {
 }
 
 int isKeyword(char *str) {
-    for (int i = 0; i < 8; i++) {
+    for (int i = 0; i < 6; i++) {
         if (strcmp(keyword[i], str) == 0) {
             return i;
         }
@@ -328,8 +328,8 @@ token getNextToken(FILE *fp) {
             }
 
             for (int i = 0; i < 6; i++) {
-                if (strcmp(buffer, relop[i]) == 0) {
-                    strcpy(tk.tokenName, relop[i]);
+                if (strcmp(buffer, relops[i]) == 0) {
+                    strcpy(tk.tokenName, relops[i]);
                     tk.row = row;
                     tk.col = col - strlen(buffer) + 1;
                     return tk;
