@@ -44,7 +44,7 @@ void NextToken()
 void invalid(char* str)
 {
     printf("\n-----------------ERROR!----------------\n");
-    printf("Expected Char %s at line %d and col %d\n",str,tk.row,tk.col);
+    printf("Expected Token %s at line %d and col %d\n",str,tk.row,tk.col);
     exit(0);
 }
 void valid()
