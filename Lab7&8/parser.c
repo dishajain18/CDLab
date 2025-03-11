@@ -1,7 +1,7 @@
 
 /* AFTER LEFT FACTORING IDENTIFIER_LIST
 Program -> main(){ declarations statement-list } 
-Declarations -> data-type identifier-list; declarations | E
+declarations -> data-type identifier-list; declarations | E
 data-type -> int | char
 identifier-list -> id identifier-list1
 identifier-list1 -> E | , identifier-list | [number]identifier-list2
@@ -11,13 +11,13 @@ statement -> assign-stat; | decision_stat
 assign_stat -> id = expn
 expn -> simple-expn eprime 
 eprime -> relop simple-expn | E 
-simple-exp -> term seprime 
+simple-expn -> term seprime 
 seprime -> addop term seprime | E
 term -> factor tprime
 tprime -> mulop factor tprime | E
 factor -> id | num
 decision-stat -> if (expn) {statement_list} dprime 
-dprime -> else {statement_list) | E
+dprime -> else {statement_list} | E
 relop -> ==|!=|<=|>=|>|< 
 addop -> +|- 
 mulop -> *|/|%
@@ -28,13 +28,16 @@ mulop -> *|/|%
 #include <stdlib.h>
 #include <string.h>
 
-FILE fp;
+FILE * fp;
 int lookahead = 0;
 token tk;
 void NextToken()
 {
     if(!lookahead)
+    {
         tk = getNextToken(fp);
+        printf("token is %s\n",tk.tokenName);
+    }
     lookahead=0;
 }
 
@@ -91,7 +94,7 @@ void relop()
 
 void dprime()
 {
-    if(strcmp(tk.tokenName,"}")==0)
+    if(strcmp(tk.tokenName,"}")==0||strcmp(tk.tokenName,"id")==0||strcmp(tk.tokenName,"if")==0)
     {
         lookahead=1;
         return;
@@ -99,10 +102,12 @@ void dprime()
         
     else if(strcmp(tk.tokenName,"else")==0)
     {
+        NextToken();
         if(strcmp(tk.tokenName,"{")==0)
         {
             NextToken();
             statement_list();
+            NextToken();
             if(strcmp(tk.tokenName,"}")==0)
                 return;
             else
@@ -113,13 +118,14 @@ void dprime()
     }
 
     else
-        invalid("} or else");
+        invalid("} or id or if or else");
 }
 
 void decision_stat()
 {
     if(strcmp(tk.tokenName,"if")==0)
     {
+        NextToken();
         if(strcmp(tk.tokenName,"(")==0)
         {
             NextToken();
@@ -127,10 +133,12 @@ void decision_stat()
             NextToken();
             if(strcmp(tk.tokenName,")")==0)
             {
+                NextToken();
                 if(strcmp(tk.tokenName,"{")==0)
                 {
                     NextToken();
                     statement_list();
+                    NextToken();
                     if(strcmp(tk.tokenName,"}")==0)
                     {
                         NextToken();
@@ -164,7 +172,7 @@ void factor()
 
 void tprime()
 {
-    if(strcmp(tk.tokenName,"+")==0 || strcmp(tk.tokenName,"-")==0 || strcmp(tk.tokenName,")")==0 || strcmp(tk.tokenName,";")==0)
+    if(strcmp(tk.tokenName,"==")==0 || strcmp(tk.tokenName,"!=")==0 || strcmp(tk.tokenName,"<=")==0 || strcmp(tk.tokenName,">=")==0 || strcmp(tk.tokenName,">")==0 || strcmp(tk.tokenName,"<")==0 || strcmp(tk.tokenName,"+")==0 || strcmp(tk.tokenName,"-")==0 || strcmp(tk.tokenName,")")==0 || strcmp(tk.tokenName,";")==0)
     {
         lookahead=1;
         return;
@@ -221,20 +229,44 @@ void eprime()
 
 void expn()
 {
-    if(strcmp(tk.tokenName,"id")==0 || strcmp(tk.tokenName,"num")==0)
-        return;
-    else
-        invalid( "id or num");
+    simple_expn();
+    NextToken();
+    eprime();
 }
 
-void assign_stat(token tk)
+void assign_stat()
 {
     if(strcmp(tk.tokenName,"id")==0)
-        return;
+    {
+        NextToken();
+        if(strcmp(tk.tokenName,"=")==0)
+        {
+            NextToken();
+            expn();
+        }
+        else
+            invalid("=");
+    }
     else
         invalid( "id");
 }
-
+void statement()
+{
+    if(strcmp(tk.tokenName,"id")==0)
+    {
+        assign_stat();
+        NextToken();
+        if(strcmp(tk.tokenName,";")==0)
+        {
+            return;
+        }
+            
+        else
+            invalid(";");
+    }
+    else
+        decision_stat();
+}
 void statement_list()
 {
     if(strcmp(tk.tokenName,"}")==0)
@@ -326,49 +358,6 @@ void data_type()
         invalid("int or char");
 }
 
-void Program()
-{
-    if(strcmp(tk.tokenName,"main")==0)
-    {
-        NextToken();
-        if(strcmp(tk.tokenName,"(")==0)
-        {
-            NextToken();
-            if(strcmp(tk.tokenName,")")==0)
-            {
-                NextToken();
-                if(strcmp(tk.tokenName,"{")==0)
-                {
-                    NextToken();
-                    declarations();
-                    NextToken();
-                    statement_list();
-                    if(strcmp(tk.tokenName,"}")==0)
-                        {
-                            NextToken();
-                            if(strcmp(tk.tokenName,"EOF")==0)
-                                valid();
-                            else
-                                invalid("EOF");
-                        }
-                    else
-                        invalid( "}");
-                }
-                else
-                    invalid( "{");
-                    
-            }
-            else
-                invalid( ")");
-        }
-        else
-            invalid("(");
-    }
-
-    else
-        invalid( "main");
-}
-
 void declarations()
 {
     if(strcmp(tk.tokenName,"}")==0 || strcmp(tk.tokenName,"id")==0 || strcmp(tk.tokenName,"if")==0)
@@ -391,6 +380,49 @@ void declarations()
         invalid(";");
 }
 
+void Program()
+{
+    if(strcmp(tk.tokenName,"main")==0)
+    {
+        NextToken();
+        if(strcmp(tk.tokenName,"(")==0)
+        {
+            NextToken();
+            if(strcmp(tk.tokenName,")")==0)
+            {
+                NextToken();
+                if(strcmp(tk.tokenName,"{")==0)
+                {
+                    NextToken();
+                    declarations();
+                    NextToken();
+                    statement_list();
+                    NextToken();
+                    if(strcmp(tk.tokenName,"}")==0)
+                    {
+                        NextToken();
+                        if(strcmp(tk.tokenName,"EOF")==0)
+                            valid();
+                        else
+                            invalid("EOF");
+                    }
+                    else
+                        invalid( "}");
+                }
+                else
+                    invalid( "{");
+                    
+            }
+            else
+                invalid( ")");
+        }
+        else
+            invalid("(");
+    }
+    else
+        invalid( "main");
+}
+
 int main() {
     fp = fopen("read.c", "r");
     if (!fp) {
@@ -399,7 +431,8 @@ int main() {
     }
     for(int i=0;i<MAX_SYMBOLS;i++)
         symtable[i]=NULL;
+    NextToken();
     Program();
-    fclose(&fp);
+    fclose(fp);
     return 0;
 }
