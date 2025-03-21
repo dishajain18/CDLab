@@ -71,6 +71,7 @@ int getnextsymbol()
     printf("Incorrect symbol\n");
     exit(-1);
 }
+
 int main()
 {
     int stack[50];
