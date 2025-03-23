@@ -153,8 +153,6 @@ int isValidDefine(FILE *fp, long *pos) {
         (*pos)++;
     }
 
-    c = fgetc(fp);
-    (*pos)++;
     if(c != ' '|| c!= '\t')
 	    return 0;
 
