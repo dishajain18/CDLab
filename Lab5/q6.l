@@ -4,7 +4,8 @@
 
 %%
 "//".* { fprintf(yyout, "%s", yytext); }  
-"/*"([^*]|[*]+[^*/])*[*]+"/"  { fprintf(yyout, "%s", yytext); }  /* I dont understand even "/*"([^*]|[*]+[^/])*[*]+"/" works but gpt says no */
+"/*"([^*]|[*]+[^/])*[*]+"/" { fprintf(yyout, "%s", yytext); }  // "/*"([^*]|[*]+[^*/])*[*]+"/" is what gpt says but idc
+"/*"(.|\n)* { fprintf(yyout, "%s", yytext); } // for unterminated comments
 [A-Z]  { fprintf(yyout, "%c", yytext[0]+32); }  
 (.|\n) { fprintf(yyout, "%s", yytext); }  
 
