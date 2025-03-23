@@ -29,7 +29,7 @@ mulop -> *|/|%
 #include <string.h>
 
 FILE * fp;
-int lookahead = 0;
+int lookahead = 0; //lookahead = 0 means previous token was matched with input. lookahead = 1 means epsilon prodn was used and hence old token is yet to be matched
 token tk;
 void NextToken()
 {
@@ -38,7 +38,7 @@ void NextToken()
         tk = getNextToken(fp);
         printf("token is %s\n",tk.tokenName);
     }
-    lookahead=0;
+    lookahead=0; 
 }
 
 void invalid(char* str)
