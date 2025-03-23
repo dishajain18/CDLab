@@ -259,8 +259,8 @@ token getNextToken(FILE *fp) {
             char next = fgetc(fp);
             col++;
             char buffer[3] = {c, '\0', '\0'};
-            if (next == '=' && (c == '=' || c == '<' || c == '>')) {
-                buffer[1] = next; // Create relational operator token (==, <=, >=)
+            if (next == '=') {
+                buffer[1] = next; // Create relational operator token (==, <=, >=, !=)
             } else {
                 fseek(fp, -1, SEEK_CUR); // Rewind if next character is not '='
                 col--;
