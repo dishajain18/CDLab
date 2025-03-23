@@ -233,6 +233,34 @@ token getNextToken(FILE *fp) {
             }
         }
 
+	// Handle relational operators
+        if (c == '=' || c == '<' || c == '>' || c == '!') {
+            char next = fgetc(fp);
+            col++;
+            char buffer[3] = {c, '\0', '\0'};
+	    int valid = 1;
+            if (next == '=') {
+                buffer[1] = next; // Create relational operator token (==, <=, >= , !=)
+            } else {
+		if(c == '=' || c == '!')
+			valid = 0;
+                fseek(fp, -1, SEEK_CUR); // Rewind if next character is not '='
+                col--;
+            }
+	    if(valid)
+	    {
+	       for (int i = 0; i < 6; i++) {
+                if (strcmp(buffer, relop[i]) == 0) {
+                    strcpy(tk.tokenName, reloptk[i]);
+                    tk.row = row;
+                    tk.col = col - strlen(buffer) + 1;
+                    return tk;
+                }
+               }   
+	    }
+            
+        }
+
         // Check for special symbols
         for (int i = 0; i < 10; i++) {
             if (c == spesymbol[i]) {
@@ -252,27 +280,6 @@ token getNextToken(FILE *fp) {
                 tk.row = row;
                 tk.col = col;
                 return tk;
-            }
-        }
-        // Handle relational operators
-        if (c == '=' || c == '<' || c == '>' || c == '!') {
-            char next = fgetc(fp);
-            col++;
-            char buffer[3] = {c, '\0', '\0'};
-            if (next == '=') {
-                buffer[1] = next; // Create relational operator token (==, <=, >=, !=)
-            } else {
-                fseek(fp, -1, SEEK_CUR); // Rewind if next character is not '='
-                col--;
-            }
-
-            for (int i = 0; i < 6; i++) {
-                if (strcmp(buffer, relop[i]) == 0) {
-                    strcpy(tk.tokenName, reloptk[i]);
-                    tk.row = row;
-                    tk.col = col - strlen(buffer) + 1;
-                    return tk;
-                }
             }
         }
 
