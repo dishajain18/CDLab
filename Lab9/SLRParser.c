@@ -72,13 +72,6 @@ int getnextsymbol()
     exit(-1);
 }
 
-void printstack(int stack[50],int stackptr)
-{
-    for(int i=0;i<=stackptr;i++)
-        printf("%d ",stack[i]);
-    printf("\t");
-}
-
 int main()
 {
     int stack[50];
