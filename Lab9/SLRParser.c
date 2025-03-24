@@ -86,7 +86,7 @@ int main()
         if(Action[s][col][0] == 's')
         {
             int statelen = strlen(Action[s][col]) -1; //in case of double digit states
-            char state[3];
+            char state[statelen+1];
             strncpy(state,Action[s][col]+1,statelen);
             state[statelen]='\0';
             stack[++stackptr] = atoi(state);
