@@ -72,6 +72,13 @@ int getnextsymbol()
     exit(-1);
 }
 
+void printstack(int stack[50],int stackptr)
+{
+    for(int i=0;i<=stackptr;i++)
+        printf("%d ",stack[i]);
+    printf("\t");
+}
+
 int main()
 {
     int stack[50];
@@ -85,8 +92,14 @@ int main()
         int s = stack[stackptr];
         if(Action[s][col][0] == 's')
         {
-            stack[++stackptr] = Action[s][col][1] - '0';
+            int statelen = strlen(Action[s][col]) -1; //in case of double digit states
+            char state[3];
+            strncpy(state,Action[s][col]+1,statelen);
+            state[statelen]='\0';
+            stack[++stackptr] = atoi(state);
             col = getnextsymbol();
+            printstack(stack,stackptr);
+            printf("shift\n");
         }
 
         else if(Action[s][col][0] == 'r')
@@ -96,16 +109,20 @@ int main()
             for(int k = 0; k < prodlen; k++)
                 stackptr--;
             int t = stack[stackptr]; 
+            // printstack(stack,stackptr);
             stack[++stackptr] = Goto[t][prod_head[prodn]];
+            printstack(stack,stackptr);
             printf("%s %s\n",Action[s][col],prod[prodn]);
         }
         else if(strcmp(Action[s][col],"accept")==0)
         {
+            printstack(stack,stackptr);
             printf("Success\n");
             break;
         }
         else
         {
+            printstack(stack,stackptr);
             printf("Error\n");
             exit(-1);
         }
