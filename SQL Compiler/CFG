@@ -1,0 +1,15 @@
+query → select_clause from_clause where_clause order_clause
+select_clause → SELECT column_list
+column_list → column COMMA column_list | column
+column → column_ref | FUNC LPAREN column_ref RPAREN | STAR | table_ref DOT STAR
+column_ref → ID | table_ref DOT ID
+from_clause → FROM table_refs
+table_refs → table_ref | table_ref JOIN table_ref ON join_condition
+table_ref → ID | ID AS ID
+join_condition → column_ref operator column_ref
+where_clause → WHERE condition | ε
+condition → column_ref operator value | condition AND condition | condition OR condition | LPAREN condition RPAREN
+operator → EQ | LT | GT | NEQ
+order_clause → ORDER BY order_item | ε
+order_item → column_ref direction
+direction → ASC | DESC | ε
